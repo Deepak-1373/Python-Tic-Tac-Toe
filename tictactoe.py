@@ -1,196 +1,207 @@
-import pygame as pg,sys
+#Import All required Modules
+import pygame as pg
+import sys
 from pygame.locals import *
-import time
+import numpy as np
 
-#initialize global variables
-XO = 'x'
-winner = None
-draw = False
-width = 400
-height = 400
-white = (255, 255, 255)
-line_color = (10,10,10)
-
-#TicTacToe 3x3 board
-TTT = [[None]*3,[None]*3,[None]*3]
-
-#initializing pygame window
+# Initializing Pygame
 pg.init()
-fps = 30
-CLOCK = pg.time.Clock()
-screen = pg.display.set_mode((width, height+100),0,32)
-pg.display.set_caption("Tic Tac Toe")
+# Pygame Screen
+WIDTH=400
+HEIGHT=400
 
-#loading the images
-opening = pg.image.load('tic tac opening.png')
-x_img = pg.image.load('x.png')
-o_img = pg.image.load('o.png')
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
+BLUE = (0, 0, 255)
 
-#resizing images
-x_img = pg.transform.scale(x_img, (80,80))
-o_img = pg.transform.scale(o_img, (80,80))
-opening = pg.transform.scale(opening, (width, height+100))
+#Tic Tac Toe Board
+BOX_MARKED = (np.array([
+    [0,0,0],
+    [0,0,0],
+    [0,0,0]
+]))
 
+#Other Global Variables
+DRAW=False
+WINNER=None
+XO='o'
+main_screen=pg.display.set_mode((WIDTH,HEIGHT+100))
+pg.display.set_caption("Tic Tac Toe Game")
+main_screen.fill(BLACK)
 
-def game_opening():
-    screen.blit(opening,(0,0))
+#Main Window and Grids
+def starting_game():
+    font=pg.font.Font(None,82)
+    main_screen.fill(GRAY)
+    text=font.render("Let's Play", True,BLUE,(GRAY))
+    textRect = text.get_rect()
+    textRect.center = (WIDTH // 2, HEIGHT // 2)
+    main_screen.blit(text, textRect)
     pg.display.update()
-    time.sleep(1)
-    screen.fill(white)
-    
-    # Drawing vertical lines
-    pg.draw.line(screen,line_color,(width/3,0),(width/3, height),7)
-    pg.draw.line(screen,line_color,(width/3*2,0),(width/3*2, height),7)
-    # Drawing horizontal lines
-    pg.draw.line(screen,line_color,(0,height/3),(width, height/3),7)
-    pg.draw.line(screen,line_color,(0,height/3*2),(width, height/3*2),7)
-    draw_status()
-    
+    pg.time.wait(1200)
+    main_screen.fill(WHITE)
+    # Two Vertical lines
+    pg.draw.line(main_screen,BLACK,(WIDTH/3,0),(WIDTH/3, HEIGHT),5)
+    pg.draw.line(main_screen,BLACK,(WIDTH/3*2,0),(WIDTH/3*2, HEIGHT),5)
+    # Two Horizontal lines
+    pg.draw.line(main_screen,BLACK,(0,0),(WIDTH, 0),5)
+    pg.draw.line(main_screen,BLACK,(0,HEIGHT/3),(WIDTH, HEIGHT/3),5)
+    pg.draw.line(main_screen,BLACK,(0,HEIGHT/3*2),(WIDTH, HEIGHT/3*2),5)
+    pg.draw.line(main_screen,BLACK,(0,HEIGHT),(WIDTH, HEIGHT),5)
 
-def draw_status():
-    global draw
-
-    if winner is None:
-        message = XO.upper() + "'s Turn"
+#Getting Mouse x and y coordinates
+def mouse_pointing():
+    global row,col
+    x, y = pg.mouse.get_pos()
+    #  getting width of the box
+    if(x<WIDTH/3) and (y<HEIGHT/3):
+        row=0
+        col=0
+    elif(x>WIDTH/3 and x<WIDTH/3*2) and (y<HEIGHT/3):
+        row=0
+        col=1
+    elif(x>WIDTH/3*2) and (y<HEIGHT/3):
+        row=0
+        col=2
+    elif(x<WIDTH/3) and (y>HEIGHT/3 and y<HEIGHT/3*2):
+        row=1
+        col=0
+    elif(x>WIDTH/3 and x<WIDTH/3*2) and (y>HEIGHT/3 and y<HEIGHT/3*2):
+        row=1
+        col=1
+    elif(x>WIDTH/3*2) and (y>HEIGHT/3 and y<HEIGHT/3*2):
+        row=1
+        col=2
+    elif(x<WIDTH/3) and (y>HEIGHT/3*2):
+        row=2
+        col=0
+    elif(x>WIDTH/3 and x<WIDTH/3*2) and (y>HEIGHT/3*2):
+        row=2
+        col=1
+    elif(x>WIDTH/3*2) and (y>HEIGHT/3*2):
+        row=2
+        col=2
     else:
-        message = winner.upper() + " won!"
-    if draw:
-        message = 'Game Draw!'
+        row=None
+        col=None
+    draw_figure(row,col)
 
-    font = pg.font.Font(None, 30)
-    text = font.render(message, 1, (255, 255, 255))
-
-    # copy the rendered message onto the board
-    screen.fill ((0, 0, 0), (0, 400, 500, 100))
-    text_rect = text.get_rect(center=(width/2, 500-50))
-    screen.blit(text, text_rect)
+#Drawing X and O on window
+def draw_figure(row,col):
+    global XO
+    if(BOX_MARKED[row,col] == 0):
+        global DRAW
+        if row==0:
+            posx = 65
+        if row==1:
+            posx = WIDTH/3 + 65
+        if row==2:
+            posx = WIDTH/3*2 + 65
+        if col==0:
+            posy = 65
+        if col==1:
+            posy = HEIGHT/3 + 65
+        if col==2:
+            posy = HEIGHT/3*2 + 65
+        #Drawing X and O on mainscreen
+        if(XO=='o'):
+            pg.draw.circle(main_screen, BLACK, (posy, posx ), 40,8)
+            BOX_MARKED[row][col] = 1
+            XO='x'
+        else:
+            pg.draw.line (main_screen,BLACK, (posy - 30, posx - 30),
+                         (posy + 30, posx + 30), 8)
+            pg.draw.line (main_screen,BLACK, (posy + 30, posx - 30),
+                         (posy - 30, posx + 30), 8)
+            BOX_MARKED[row][col] = 2
+            XO='o'
+        pg.display.update()
+        check_winner()
+    else:
+        pass
+    #Show Player Message turns 
+    message= XO.upper() + "'s Turn"
+    font=pg.font.Font(None,70)
+    text = font.render(message, True,BLUE,(WHITE))
+    textRect = text.get_rect()
+    textRect.center = (200,450)
+    main_screen.blit(text, textRect)
     pg.display.update()
 
-def check_win():
-    global TTT, winner,draw
-
-    # check for winning rows
+#This Function check winner and draw
+def check_winner():
+    global WINNER
     for row in range (0,3):
-        if ((TTT [row][0] == TTT[row][1] == TTT[row][2]) and(TTT [row][0] is not None)):
+        if ((BOX_MARKED [row][0] == BOX_MARKED[row][1] == BOX_MARKED[row][2]) and(BOX_MARKED [row][0] != 0)):
             # this row won
-            winner = TTT[row][0]
-            pg.draw.line(screen, (250,0,0), (0, (row + 1)*height/3 -height/6),\
-                              (width, (row + 1)*height/3 - height/6 ), 4)
+            WINNER = BOX_MARKED[row][0]
+            pg.draw.line(main_screen, BLACK, (0, (row + 1)*HEIGHT/3 -HEIGHT/6),\
+                              (WIDTH, (row + 1)*HEIGHT/3 - HEIGHT/6 ), 4)
+            show_winning_message(WINNER)
             break
-
     # check for winning columns
     for col in range (0, 3):
-        if (TTT[0][col] == TTT[1][col] == TTT[2][col]) and (TTT[0][col] is not None):
+        if (BOX_MARKED[0][col] == BOX_MARKED[1][col] == BOX_MARKED[2][col]) and (BOX_MARKED[0][col] != 0):
             # this column won
-            winner = TTT[0][col]
+            WINNER = BOX_MARKED[0][col]
             #draw winning line
-            pg.draw.line (screen, (250,0,0),((col + 1)* width/3 - width/6, 0),\
-                          ((col + 1)* width/3 - width/6, height), 4)
+            pg.draw.line (main_screen, BLACK,((col + 1)* WIDTH/3 - WIDTH/6, 0),\
+                          ((col + 1)* WIDTH/3 - WIDTH/6, HEIGHT), 4)
+            show_winning_message(WINNER)
             break
-
-    # check for diagonal winners
-    if (TTT[0][0] == TTT[1][1] == TTT[2][2]) and (TTT[0][0] is not None):
+    # check for diagonal WINNERs
+    if (BOX_MARKED[0][0] == BOX_MARKED[1][1] == BOX_MARKED[2][2]) and (BOX_MARKED[0][0] != 0):
         # game won diagonally left to right
-        winner = TTT[0][0]
-        pg.draw.line (screen, (250,70,70), (50, 50), (350, 350), 4)
-       
-
-    if (TTT[0][2] == TTT[1][1] == TTT[2][0]) and (TTT[0][2] is not None):
+        WINNER = BOX_MARKED[0][0]
+        pg.draw.line (main_screen, BLACK, (50, 50), (350, 350), 4)
+        show_winning_message(WINNER)
+    if (BOX_MARKED[0][2] == BOX_MARKED[1][1] == BOX_MARKED[2][0]) and (BOX_MARKED[0][2] != 0):
         # game won diagonally right to left
-        winner = TTT[0][2]
-        pg.draw.line (screen, (250,70,70), (350, 50), (50, 350), 4)
-    
-    if(all([all(row) for row in TTT]) and winner is None ):
-        draw = True
-    draw_status()
+        WINNER = BOX_MARKED[0][2]
+        pg.draw.line (main_screen, BLACK, (350, 50), (50, 350), 4)
+        show_winning_message(WINNER)
+    if(all([all(row) for row in BOX_MARKED]) and WINNER is None ):
+        DRAW = True
+        show_winning_message('Match Draw')
 
-
-def drawXO(row,col):
-    global TTT,XO
-    if row==1:
-        posx = 30
-    if row==2:
-        posx = width/3 + 30
-    if row==3:
-        posx = width/3*2 + 30
-
-    if col==1:
-        posy = 30
-    if col==2:
-        posy = height/3 + 30
-    if col==3:
-        posy = height/3*2 + 30
-    TTT[row-1][col-1] = XO
-    if(XO == 'x'):
-        screen.blit(x_img,(posy,posx))
-        XO= 'o'
+def show_winning_message(winner):
+    font=pg.font.Font(None,70)
+    if winner == 1:
+        winner = "O is winner "
+    elif winner == 2:
+        winner = "X is winner"
     else:
-        screen.blit(o_img,(posy,posx))
-        XO= 'x'
+        pass
+    text=font.render(winner, True,BLUE,(WHITE))
+    textRect = text.get_rect()
+    textRect.center = (200,450)
+    main_screen.blit(text, textRect)
     pg.display.update()
-    #print(posx,posy)
-    #print(TTT)
-   
-    
-
-def userClick():
-    #get coordinates of mouse click
-    x,y = pg.mouse.get_pos()
-
-    #get column of mouse click (1-3)
-    if(x<width/3):
-        col = 1
-    elif (x<width/3*2):
-        col = 2
-    elif(x<width):
-        col = 3
-    else:
-        col = None
-        
-    #get row of mouse click (1-3)
-    if(y<height/3):
-        row = 1
-    elif (y<height/3*2):
-        row = 2
-    elif(y<height):
-        row = 3
-    else:
-        row = None
-    #print(row,col)
-    
-
-    if(row and col and TTT[row-1][col-1] is None):
-        global XO
-        
-        #draw the x or o on screen
-        drawXO(row,col)
-        check_win()
-        
-        
+    pg.time.wait(2000)
+    reset_game()
 
 def reset_game():
-    global TTT, winner,XO, draw
-    time.sleep(3)
-    XO = 'x'
-    draw = False
-    game_opening()
-    winner=None
-    TTT = [[None]*3,[None]*3,[None]*3]
-    
+    global BOX_MARKED,DRAW,WINNER
+    BOX_MARKED = (np.array([
+        [0,0,0],
+        [0,0,0],
+        [0,0,0]
+    ]))
+    XO='x'
+    DRAW=False
+    WINNER=None
+    starting_game()
+starting_game()
 
-game_opening()
-
-# run the game loop forever
+#Program main loop
 while(True):
     for event in pg.event.get():
         if event.type == QUIT:
             pg.quit()
             sys.exit()
-        elif event.type is MOUSEBUTTONDOWN:
-            # the user clicked; place an X or O
-            userClick()
-            if(winner or draw):
-                reset_game()
-            
+        elif event.type==MOUSEBUTTONDOWN:
+            mouse_pointing()
     pg.display.update()
-    CLOCK.tick(fps)
+    pg.display.flip()
